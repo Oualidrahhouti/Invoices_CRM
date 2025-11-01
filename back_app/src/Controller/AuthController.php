@@ -2,7 +2,9 @@
 
 namespace App\Controller;
 
+use App\Dto\ForgetPasswordDto;
 use App\Dto\RegisterUserDto;
+use App\Dto\ResetPasswordDto;
 use App\Entity\PasswordResetToken;
 use App\Factory\UserFactory;
 use App\Repository\UserRepository;
@@ -51,14 +53,9 @@ final class AuthController extends AbstractController
     }
 
     #[Route('api/forget_password', name:'app_forget_password')]
-    public function forgetPassword(Request $request)
+    public function forgetPassword(#[MapRequestPayload] ForgetPasswordDto $forgetPasswordDto)
     {
-        $data = json_decode($request->getContent(),true);
-        $email = $data['email'] ?? null;
-
-        if(!$email){
-            return $this->json(['error'=>'Email is required'],400);
-        }
+        $email = $forgetPasswordDto->email;
 
         $user= $this->userRepository->findOneBy(['email'=>$email]);
 
@@ -83,16 +80,11 @@ final class AuthController extends AbstractController
     }
 
     #[Route('api/reset_password',name: 'app_reset_password')]
-    public function resetPassword(Request $request, UserPasswordHasherInterface $passwordHasher)
+    public function resetPassword(#[MapRequestPayload] ResetPasswordDto $resetPasswordDto, UserPasswordHasherInterface $passwordHasher)
     {
-        $data= json_decode($request->getContent(),true);
 
-        $tokenValue=$data['token'] ?? null;
-        $newPassword=$data['newPassword'] ?? null;
-
-        if (!$tokenValue || !$newPassword) {
-            return $this->json(['error' => 'Token and new password are required'], 400);
-        }
+        $tokenValue=$resetPasswordDto->token;
+        $newPassword=$resetPasswordDto->newPassword;
 
         $token=$this->em->getRepository(PasswordResetToken::class)->findOneBy(['token'=>$tokenValue]);
 
