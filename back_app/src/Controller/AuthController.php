@@ -11,9 +11,9 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 final class AuthController extends AbstractController
 {
@@ -32,24 +32,9 @@ final class AuthController extends AbstractController
 
     #[Route('api/register', name:'app_register')]
     public function register(
-    Request $request,
-    ValidatorInterface $validator,
+    #[MapRequestPayload] RegisterUserDto $userDTO,
     UserFactory $userFactory): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
-
-        if (!isset($data['email']) || !isset($data['password'])) {
-            return new JsonResponse(['error' => 'Email and password are required'], 400);
-        }
-
-        $userDTO = new RegisterUserDto();
-        $userDTO->email=$data['email'] ?? '';
-        $userDTO->password=$data['password'] ?? '';
-
-        $errors= $validator->validate($userDTO);
-        if(count($errors)>0){
-            return $this->json(['errors' => (string) $errors], 400);
-        }
 
         $user = $userFactory->createFromDto($userDTO);
 
